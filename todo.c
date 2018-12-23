@@ -132,49 +132,69 @@ int tokenise(char line[], char delim[], char *tokens[MAX_BOARDS]) {
     return count;
 }
 
-int read(Item boards[MAX_BOARDS][MAX_ITEMS]) {
-    FILE* f = fopen(FILENAME, "r");
+int read(Item boards[MAX_BOARDS][MAX_ITEMS], char **board_names) {
+    FILE* f;
+    if (f = fopen(FILENAME, "r")) {
 
-    // get no of boards and board names
-    char line[500];
-    if (fgets(line, sizeof(line), f))
-        printf("%s", line);
-    int num_boards;
-    char *board_names[MAX_BOARDS];
-    num_boards = tokenise(line, DELIM, board_names);
 
-    // read to boards[][]
-    int board_i = 0;
-    int item_i = 0;
-    while (fgets(line, sizeof(line), f)) {
-        char *tokens[MAX_BOARDS];
+        // get no of boards and board names
+        char line[500];
+        if (fgets(line, sizeof(line), f))
+            printf("%s", line);
+        int num_boards;
+        //(*board_names)[MAX_BOARDS];
+        num_boards = tokenise(line, DELIM, board_names);
 
-        int num_field;
-        num_field = tokenise(line, DELIM, tokens);
+        // read to boards[][]
+        int board_i = 0;
+        int item_i = 0;
 
-        if (num_field <= 0) {
-            board_i++;
-            item_i=0;
+        int i;
+        for (i=0; i<MAX_BOARDS; i++) {
+            if (board_names[i] == NULL)
+                break;
+            printf("%s ", board_names[i]);
+        }
+        printf("\n");
+
+
+        while (fgets(line, sizeof(line), f)) {
+            char *tokens[MAX_BOARDS];
+
+            int num_field;
+            num_field = tokenise(line, DELIM, tokens);
+
+            if (num_field <= 0) {
+                board_i++;
+                item_i=0;
+            }
+
+            if (num_field >= 2) {
+                strcpy(boards[board_i][item_i].desc, tokens[DESC_I]);
+                strcpy(boards[board_i][item_i++].due, tokens[DUE_I]);
+            }
         }
 
-        if (num_field >= 2) {
-            strcpy(boards[board_i][item_i].desc, tokens[DESC_I]);
-            strcpy(boards[board_i][item_i++].due, tokens[DUE_I]);
-        }
+        fclose(f);
+
+
+        // print boards to test
+        //int i, j;
+        //for (i=0; i<num_boards; i++) {
+        //    printf("%d\n", i);
+        //    for (j=0; j<2; j++) {
+        //        printf("desc: %s, due: %s \n",
+        //                boards[i][j].desc, boards[i][j].due);
+        //    }
+        //}
+
+        return num_boards;
     }
 
-    fclose(f);
-
-    // print boards to test
-    int i, j;
-    for (i=0; i<num_boards; i++) {
-        printf("%d\n", i);
-        for (j=0; j<2; j++) {
-            printf("desc: %s, due: %s \n", boards[i][j].desc, boards[i][j].due);
-        }
+    else {
+        printf("File doesn't exist\n");
+        return 0;
     }
-
-    return num_boards;
 }
 
 // add board
@@ -184,9 +204,18 @@ int main() {
     Item boards[MAX_BOARDS][MAX_ITEMS] = {{{{0}}}};
 
     // read file for no of boards
-    int num_boards = read(boards);
+    char *board_names[MAX_BOARDS] = {0};
+    int num_boards = read(boards, board_names);
     printf("no of boards: %d\n", num_boards);
-    
+
+    int i;
+    for (i=0; i<MAX_BOARDS; i++) {
+        if (board_names[i] == NULL)
+            break;
+        printf("%s ", board_names[i]);
+    }
+    printf("\n");
+
     /*
     Item todo[10] = {{0}};
     Item doing[10] = {{0}};
@@ -210,14 +239,14 @@ int main() {
     FILE *f;
     f = fopen("list.txt", "w");
     if (f == NULL) {
-        printf("Can't open file\n");
-        exit(1);
+    printf("Can't open file\n");
+    exit(1);
     }
     write(f, "TODO", todo, todo_i);
     write(f, "DOING", doing, doing_i);
     write(f, "DONE", done, done_i);
     fclose(f);
-    */
+     */
 
     return 0;
 }
