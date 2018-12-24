@@ -234,7 +234,7 @@ void write_boards(Item boards[MAX_BOARDS][MAX_ITEMS],
         char **board_names, size_t num_boards) {
     FILE *f;
     int i, j;
-    if (f = fopen("test.txt", "w")) {
+    if (f = fopen(FILENAME, "w")) {
         for (i=0; i<num_boards-1; i++)
             fprintf(f, "%s,", board_names[i]);
         fprintf(f, "%s\n\n", board_names[i]);
@@ -254,6 +254,45 @@ void write_boards(Item boards[MAX_BOARDS][MAX_ITEMS],
     }
 }
 
+int add_board(char **board_names, int num_boards, char board_name[]) {
+    strcpy(board_names[num_boards], board_name);
+    return num_boards;
+}
+
+int delete_board(Item boards[MAX_BOARDS][MAX_ITEMS],
+        char **board_names, int num_boards, char board_name[]) {
+    int match_i, i, j;
+    Item temp_item;
+    char temp_str[MAX_LENGTH];
+
+    for (match_i=0; match_i<num_boards; match_i++)
+        if (strcmp(board_name, board_names[match_i]) == 0)
+            break;
+        else
+            printf("not same: %s\n", board_names[match_i]);
+
+    if (match_i >= num_boards) /* no match, return */
+        return num_boards;
+
+    /* shift all valid boards thereafter left */
+    printf("match: %d\n", i);
+    for (i=match_i; i<num_boards-1; i++) {
+        for (j=0; j<MAX_ITEMS; j++) {
+            if (strlen(boards[i+1][j].desc) > 0)
+                boards[i][j] = boards[i+1][j];
+        }
+        strcpy(board_names[i], board_names[i+1]);
+    }
+
+    if (i<num_boards) {
+        for (j=0; j<MAX_ITEMS; j++)
+            boards[i][j] = (const Item){0};
+        board_names[i] = malloc(MAX_LENGTH * sizeof(char));
+    }
+
+    return num_boards-1;
+}
+
 // add board
 // delete board
 // move item
@@ -270,6 +309,11 @@ int main() {
     print_items(boards);
 
     display(boards, board_names, num_boards);
+    //num_boards = add_board(board_names, num_boards, "Backlog");
+    //write_boards(boards, board_names, num_boards);
+
+    num_boards = read(boards, board_names);
+    num_boards = delete_board(boards, board_names, num_boards, "Backlog");
     write_boards(boards, board_names, num_boards);
 
     free_str_arr(board_names, MAX_BOARDS);
