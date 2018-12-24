@@ -28,7 +28,6 @@ const char colours[][6] = {
 enum ItemFields {
     DESC_I,
     DUE_I,
-    BOARD_I,
     NUM_FIELDS
 };
 
@@ -143,40 +142,34 @@ int read(Item boards[MAX_BOARDS][MAX_ITEMS], char **board_names) {
 
     if (f = fopen(FILENAME, "r")) {
 
-        // get no of boards and board names
         char line[500];
-        // read to boards[][]
         int board_i = 0;
         int item_i = 0;
         int num_boards;
 
-        if (fgets(line, sizeof(line), f))
-            printf("%s", line);
+        /* get number of boards and board names */
+        fgets(line, sizeof(line), f);
         num_boards = tokenise(line, DELIM, board_names);
 
-
+        /* populate boards with file data */
         while (fgets(line, sizeof(line), f)) {
-            //char *tokens[MAX_BOARDS];
             char **tokens = init_str_arr(NUM_FIELDS, MAX_LENGTH);
             int num_fields;
 
-            printf("line: %s\n", line);
             num_fields = tokenise(line, DELIM, tokens);
 
-            printf("fields: %d\n", num_fields);
             if (num_fields <= 0) {
                 board_i++;
                 item_i=0;
             }
 
-            if (num_fields >= 2) {
+            if (num_fields == NUM_FIELDS) {
                 strcpy(boards[board_i][item_i].desc, tokens[DESC_I]);
                 strcpy(boards[board_i][item_i++].due, tokens[DUE_I]);
             }
         }
 
         fclose(f);
-
         return num_boards;
     }
 
@@ -186,7 +179,7 @@ int read(Item boards[MAX_BOARDS][MAX_ITEMS], char **board_names) {
     }
 }
 
-char** init_str_arr(size_t arr_size, size_t str_len) {
+char ** init_str_arr(size_t arr_size, size_t str_len) {
     char **str_arr;
     int i;
 
@@ -208,7 +201,8 @@ void print_items(Item boards[MAX_BOARDS][MAX_ITEMS]) {
     int i, j;
     for (i=0; i<MAX_BOARDS; i++)
         for (j=0; j<MAX_ITEMS; j++)
-            printf("%s %s\n", boards[i][j].desc, boards[i][j].due);
+            if (strlen(boards[i][j].desc) > 0)
+                printf("%s %s\n", boards[i][j].desc, boards[i][j].due);
 }
 
 // add board
@@ -223,8 +217,8 @@ int main() {
     int num_boards = read(boards, board_names);
     printf("no of boards: %d\n", num_boards);
 
-    //print_str_arr(board_names, 10);
-    //print_items(boards);
+    print_str_arr(board_names, num_boards);
+    print_items(boards);
 
     return 0;
 }
