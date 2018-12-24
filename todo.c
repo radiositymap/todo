@@ -230,6 +230,30 @@ void display(Item boards[MAX_BOARDS][MAX_ITEMS],
     }
 }
 
+void write_boards(Item boards[MAX_BOARDS][MAX_ITEMS],
+        char **board_names, size_t num_boards) {
+    FILE *f;
+    int i, j;
+    if (f = fopen("test.txt", "w")) {
+        for (i=0; i<num_boards-1; i++)
+            fprintf(f, "%s,", board_names[i]);
+        fprintf(f, "%s\n\n", board_names[i]);
+
+        for (i=0; i<num_boards; i++) {
+            fprintf(f, "%s\n", board_names[i]);
+            for (j=0; j<MAX_ITEMS; j++)
+                if (strlen(boards[i][j].desc) > 0)
+                    fprintf(f, "%s,%s\n",  boards[i][j].desc, boards[i][j].due);
+                else {
+                    fprintf(f, "\n");
+                    break;
+                }
+        }
+
+        fclose(f);
+    }
+}
+
 // add board
 // delete board
 // move item
@@ -246,6 +270,7 @@ int main() {
     print_items(boards);
 
     display(boards, board_names, num_boards);
+    write_boards(boards, board_names, num_boards);
 
     free_str_arr(board_names, MAX_BOARDS);
 
