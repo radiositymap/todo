@@ -18,10 +18,10 @@
 #define MAX_LENGTH 60
 
 const char colours[][6] = {
-    COL_C,
     COL_R,
     COL_Y,
     COL_G,
+    COL_C,
     COL_M
 };
 
@@ -46,6 +46,7 @@ typedef struct ItemStruct {
 
 
 char** init_str_arr(size_t arr_size, size_t str_len);
+void free_str_arr(char **str_arr, size_t arr_size);
 
 void test_display(void) {
     printf(COL_R "Test" COL_X "\n");
@@ -54,11 +55,6 @@ void test_display(void) {
     printf(COL_B "Test" COL_X "\n");
     printf(COL_M "Test" COL_X "\n");
     printf(COL_X "Test" COL_X "\n");
-}
-
-void display_header(void) { // colour codes are counted as extra chars
-    printf("%-30s%-30s%-30s\n", 
-            COL_R "TODO", COL_Y "DOING", COL_G "DONE" COL_X);
 }
 
 void sort(Item* items, size_t items_i,
@@ -96,18 +92,7 @@ int max(size_t a, size_t b) {
     return a >= b ? a : b;
 }
 
-void display(Item* todo, size_t todo_i,
-        Item* doing, size_t doing_i,
-        Item* done, size_t done_i) {
-    int i;
-    int max_i = max(todo_i, max(doing_i, done_i));
-    for (i=0; i<max_i; i++) {
-        printf("%-25s%-25s%-25s\n",
-                todo[i].desc, doing[i].desc, done[i].desc);
-        printf(COL_B "%25s%25s%25s\n" COL_X, 
-                todo[i].due, doing[i].due, done[i].due);
-    }
-}
+
 
 void write(FILE *f, char* header, Item* items, size_t size) {
     int i;
@@ -143,9 +128,11 @@ int read(Item boards[MAX_BOARDS][MAX_ITEMS], char **board_names) {
     if (f = fopen(FILENAME, "r")) {
 
         char line[500];
-        int board_i = 0;
+        int board_i = -1;
         int item_i = 0;
         int num_boards;
+        char **tokens = init_str_arr(NUM_FIELDS, MAX_LENGTH);
+        int num_fields;
 
         /* get number of boards and board names */
         fgets(line, sizeof(line), f);
@@ -153,8 +140,6 @@ int read(Item boards[MAX_BOARDS][MAX_ITEMS], char **board_names) {
 
         /* populate boards with file data */
         while (fgets(line, sizeof(line), f)) {
-            char **tokens = init_str_arr(NUM_FIELDS, MAX_LENGTH);
-            int num_fields;
 
             num_fields = tokenise(line, DELIM, tokens);
 
@@ -168,6 +153,7 @@ int read(Item boards[MAX_BOARDS][MAX_ITEMS], char **board_names) {
                 strcpy(boards[board_i][item_i++].due, tokens[DUE_I]);
             }
         }
+        free_str_arr(tokens, NUM_FIELDS);
 
         fclose(f);
         return num_boards;
@@ -191,6 +177,13 @@ char ** init_str_arr(size_t arr_size, size_t str_len) {
     
 }
 
+void free_str_arr(char **str_arr, size_t arr_size) {
+    int i;
+    for (i=0; i<arr_size; i++)
+        free(str_arr[i]);
+    free(str_arr);
+}
+
 void print_str_arr(char **str_arr, size_t len) {
     int i;
     for (i=0; i<len; i++)
@@ -199,10 +192,42 @@ void print_str_arr(char **str_arr, size_t len) {
 
 void print_items(Item boards[MAX_BOARDS][MAX_ITEMS]) {
     int i, j;
-    for (i=0; i<MAX_BOARDS; i++)
+    for (i=0; i<MAX_BOARDS; i++) {
+        printf("%d\n", i);
         for (j=0; j<MAX_ITEMS; j++)
             if (strlen(boards[i][j].desc) > 0)
                 printf("%s %s\n", boards[i][j].desc, boards[i][j].due);
+    }
+}
+
+void display(Item boards[MAX_BOARDS][MAX_ITEMS],
+        char ** board_names, size_t num_boards) {
+    int i, j;
+    int empty_count = 0;
+
+    // display header
+    for (i=0; i<num_boards; i++)
+        printf("%s%-25s" COL_X, colours[i], board_names[i]);
+    printf("\n");
+
+    for (j=0; j<10; j++) {
+        empty_count = 0;
+        for (i=0; i<num_boards; i++) {
+            if (strlen(boards[i][j].desc) == 0) {
+                empty_count++;
+                if (empty_count >= num_boards) {
+                    printf("\n");
+                    return;
+                }
+            }
+            printf("%-25s", boards[i][j].desc);
+        }
+        printf("\n");
+        for (i=0; i<num_boards; i++) {
+            printf(COL_B "%25s" COL_X, boards[i][j].due);
+        }
+        printf("\n");
+    }
 }
 
 // add board
@@ -219,6 +244,10 @@ int main() {
 
     print_str_arr(board_names, num_boards);
     print_items(boards);
+
+    display(boards, board_names, num_boards);
+
+    free_str_arr(board_names, MAX_BOARDS);
 
     return 0;
 }
