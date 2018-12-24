@@ -28,7 +28,8 @@ const char colours[][6] = {
 enum ItemFields {
     DESC_I,
     DUE_I,
-    BOARD_I
+    BOARD_I,
+    NUM_FIELDS
 };
 
 enum Boards {
@@ -119,10 +120,11 @@ void write(FILE *f, char* header, Item* items, size_t size) {
 
 int tokenise(char line[], char delim[], char **tokens) {
     char *token;
-    int count = 0;
     char *pos;
+    int count = 0;
 
     token = strtok(line, delim);
+
     while (token != NULL && !isspace(token[0])) {
         strcpy(tokens[count], token);
         token = strtok(NULL, delim);
@@ -130,13 +132,16 @@ int tokenise(char line[], char delim[], char **tokens) {
     }
 
     // trim \n off last token
-    if ((pos=strchr(tokens[count-1], '\n')) != NULL)
+    if (count > 0 && (pos=strchr(tokens[count-1], '\n')) != NULL)
         *pos = '\0';
 
     return count;
 }
 
 int read(Item boards[MAX_BOARDS][MAX_ITEMS], char **board_names) {
+    FILE *f;
+
+    if (f = fopen(FILENAME, "r")) {
 
         // get no of boards and board names
         char line[500];
@@ -147,52 +152,30 @@ int read(Item boards[MAX_BOARDS][MAX_ITEMS], char **board_names) {
 
         if (fgets(line, sizeof(line), f))
             printf("%s", line);
-        //(*board_names)[MAX_BOARDS];
         num_boards = tokenise(line, DELIM, board_names);
 
-        fgets(line, sizeof(line), f);
 
-        //while (fgets(line, sizeof(line), f)) {
+        while (fgets(line, sizeof(line), f)) {
             //char *tokens[MAX_BOARDS];
-            //int num_field;
+            char **tokens = init_str_arr(NUM_FIELDS, MAX_LENGTH);
+            int num_fields;
 
-            //num_field = tokenise(line, DELIM, tokens);
-            /*
+            printf("line: %s\n", line);
+            num_fields = tokenise(line, DELIM, tokens);
 
-            if (num_field <= 0) {
+            printf("fields: %d\n", num_fields);
+            if (num_fields <= 0) {
                 board_i++;
                 item_i=0;
             }
 
-            if (num_field >= 2) {
+            if (num_fields >= 2) {
                 strcpy(boards[board_i][item_i].desc, tokens[DESC_I]);
                 strcpy(boards[board_i][item_i++].due, tokens[DUE_I]);
             }
-            */
-        //}
+        }
 
         fclose(f);
-
-
-        int i;
-        for (i=0; i<MAX_BOARDS; i++) {
-            if (board_names[i] == NULL)
-                break;
-            printf("a %s ", board_names[i]);
-        }
-        printf("\n");
-
-
-
-        // print boards to test
-        //int i, j;
-        //for (i=0; i<num_boards; i++) {
-        //    printf("%d\n", i);
-        //    for (j=0; j<2; j++) {
-        //        printf("desc: %s, due: %s \n",
-        //                boards[i][j].desc, boards[i][j].due);
-        //    }
-        //}
 
         return num_boards;
     }
@@ -215,6 +198,19 @@ char** init_str_arr(size_t arr_size, size_t str_len) {
     
 }
 
+void print_str_arr(char **str_arr, size_t len) {
+    int i;
+    for (i=0; i<len; i++)
+        printf("%d: %s\n", i, str_arr[i]);
+}
+
+void print_items(Item boards[MAX_BOARDS][MAX_ITEMS]) {
+    int i, j;
+    for (i=0; i<MAX_BOARDS; i++)
+        for (j=0; j<MAX_ITEMS; j++)
+            printf("%s %s\n", boards[i][j].desc, boards[i][j].due);
+}
+
 // add board
 // delete board
 // move item
@@ -227,45 +223,8 @@ int main() {
     int num_boards = read(boards, board_names);
     printf("no of boards: %d\n", num_boards);
 
-    int i;
-    for (i=0; i<MAX_BOARDS; i++) {
-        if (board_names[i] == NULL)
-            break;
-        printf("%s ", board_names[i]);
-    }
-    printf("\n");
-
-    /*
-    Item todo[10] = {{0}};
-    Item doing[10] = {{0}};
-    Item done[10] = {{0}};
-    size_t todo_i=0;
-    size_t doing_i=0;
-    size_t done_i=0;
-
-    Item item1 = {"Include time lib", "20181214", TODO};
-    Item item2 = {"Time sorting", "20181215", TODO};
-    Item item3 = {"Display", "20181213", DONE};
-    Item item4 = {"Sort by Board", "20181214", DOING};
-    Item items[] = {item1, item2, item3, item4};
-
-    sort(items, 4, todo, &todo_i, doing, &doing_i, done, &done_i);
-
-    displayHeader();
-    display(todo, todo_i, doing, doing_i, done, done_i);
-
-    // write to file
-    FILE *f;
-    f = fopen("list.txt", "w");
-    if (f == NULL) {
-    printf("Can't open file\n");
-    exit(1);
-    }
-    write(f, "TODO", todo, todo_i);
-    write(f, "DOING", doing, doing_i);
-    write(f, "DONE", done, done_i);
-    fclose(f);
-     */
+    //print_str_arr(board_names, 10);
+    //print_items(boards);
 
     return 0;
 }
