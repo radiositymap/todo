@@ -15,6 +15,7 @@
 #define DELIM ","
 #define MAX_BOARDS 10
 #define MAX_ITEMS 50
+#define MAX_LENGTH 60
 
 const char colours[][6] = {
     COL_C,
@@ -42,6 +43,9 @@ typedef struct ItemStruct {
     char due[10];
     int board;
 } Item;
+
+
+char** init_str_arr(size_t arr_size, size_t str_len);
 
 void test_display(void) {
     printf(COL_R "Test" COL_X "\n");
@@ -113,19 +117,19 @@ void write(FILE *f, char* header, Item* items, size_t size) {
     }
 }
 
-int tokenise(char line[], char delim[], char *tokens[MAX_BOARDS]) {
+int tokenise(char line[], char delim[], char **tokens) {
     char *token;
     int count = 0;
+    char *pos;
 
     token = strtok(line, delim);
     while (token != NULL && !isspace(token[0])) {
-        tokens[count] = token;
+        strcpy(tokens[count], token);
         token = strtok(NULL, delim);
         count++;
     }
 
     // trim \n off last token
-    char *pos;
     if ((pos=strchr(tokens[count-1], '\n')) != NULL)
         *pos = '\0';
 
@@ -133,36 +137,27 @@ int tokenise(char line[], char delim[], char *tokens[MAX_BOARDS]) {
 }
 
 int read(Item boards[MAX_BOARDS][MAX_ITEMS], char **board_names) {
-    FILE* f;
-    if (f = fopen(FILENAME, "r")) {
-
 
         // get no of boards and board names
         char line[500];
-        if (fgets(line, sizeof(line), f))
-            printf("%s", line);
-        int num_boards;
-        //(*board_names)[MAX_BOARDS];
-        num_boards = tokenise(line, DELIM, board_names);
-
         // read to boards[][]
         int board_i = 0;
         int item_i = 0;
+        int num_boards;
 
-        int i;
-        for (i=0; i<MAX_BOARDS; i++) {
-            if (board_names[i] == NULL)
-                break;
-            printf("%s ", board_names[i]);
-        }
-        printf("\n");
+        if (fgets(line, sizeof(line), f))
+            printf("%s", line);
+        //(*board_names)[MAX_BOARDS];
+        num_boards = tokenise(line, DELIM, board_names);
 
+        fgets(line, sizeof(line), f);
 
-        while (fgets(line, sizeof(line), f)) {
-            char *tokens[MAX_BOARDS];
+        //while (fgets(line, sizeof(line), f)) {
+            //char *tokens[MAX_BOARDS];
+            //int num_field;
 
-            int num_field;
-            num_field = tokenise(line, DELIM, tokens);
+            //num_field = tokenise(line, DELIM, tokens);
+            /*
 
             if (num_field <= 0) {
                 board_i++;
@@ -173,9 +168,20 @@ int read(Item boards[MAX_BOARDS][MAX_ITEMS], char **board_names) {
                 strcpy(boards[board_i][item_i].desc, tokens[DESC_I]);
                 strcpy(boards[board_i][item_i++].due, tokens[DUE_I]);
             }
-        }
+            */
+        //}
 
         fclose(f);
+
+
+        int i;
+        for (i=0; i<MAX_BOARDS; i++) {
+            if (board_names[i] == NULL)
+                break;
+            printf("a %s ", board_names[i]);
+        }
+        printf("\n");
+
 
 
         // print boards to test
@@ -197,6 +203,18 @@ int read(Item boards[MAX_BOARDS][MAX_ITEMS], char **board_names) {
     }
 }
 
+char** init_str_arr(size_t arr_size, size_t str_len) {
+    char **str_arr;
+    int i;
+
+    str_arr = malloc(arr_size * sizeof(char*));
+    for (i=0; i<arr_size; i++)
+        str_arr[i] = malloc(str_len * sizeof(char));
+
+    return str_arr;
+    
+}
+
 // add board
 // delete board
 // move item
@@ -204,7 +222,8 @@ int main() {
     Item boards[MAX_BOARDS][MAX_ITEMS] = {{{{0}}}};
 
     // read file for no of boards
-    char *board_names[MAX_BOARDS] = {0};
+    char **board_names = init_str_arr(MAX_BOARDS, MAX_LENGTH);
+
     int num_boards = read(boards, board_names);
     printf("no of boards: %d\n", num_boards);
 
