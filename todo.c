@@ -231,7 +231,7 @@ void display(Item boards[MAX_BOARDS][MAX_ITEMS],
 }
 
 void write_boards(Item boards[MAX_BOARDS][MAX_ITEMS],
-        char **board_names, size_t num_boards) {
+        char **board_names, int num_boards) {
     FILE *f;
     int i, j;
     if (f = fopen(FILENAME, "w")) {
@@ -256,7 +256,7 @@ void write_boards(Item boards[MAX_BOARDS][MAX_ITEMS],
 
 int add_board(char **board_names, int num_boards, char board_name[]) {
     strcpy(board_names[num_boards], board_name);
-    return num_boards;
+    return num_boards + 1;
 }
 
 int delete_board(Item boards[MAX_BOARDS][MAX_ITEMS],
@@ -310,15 +310,23 @@ void add_item(Item boards[MAX_BOARDS][MAX_ITEMS], char desc[], char due[]) {
 // move item
 int main() {
     Item boards[MAX_BOARDS][MAX_ITEMS] = {{{{0}}}};
-
-    // read file for no of boards
     char **board_names = init_str_arr(MAX_BOARDS, MAX_LENGTH);
 
+    // read file for no of boards
     int num_boards = read(boards, board_names);
     printf("no of boards: %d\n", num_boards);
 
-    print_str_arr(board_names, num_boards);
-    print_items(boards);
+    if (num_boards <= 0) {
+        printf("No boards. Creating boards.\n");
+        num_boards = add_board(board_names, num_boards, "TODO");
+        num_boards = add_board(board_names, num_boards, "DOING");
+        num_boards = add_board(board_names, num_boards, "DONE");
+        write_boards(boards, board_names, num_boards);
+        return 0;
+    }
+
+    //print_str_arr(board_names, num_boards);
+    //print_items(boards);
 
     display(boards, board_names, num_boards);
     //num_boards = add_board(board_names, num_boards, "Backlog");
@@ -326,7 +334,7 @@ int main() {
 
     num_boards = read(boards, board_names);
     //num_boards = delete_board(boards, board_names, num_boards, "Backlog");
-    add_item(boards, "hello", "randtime");
+    //add_item(boards, "hello", "randtime");
     write_boards(boards, board_names, num_boards);
 
     free_str_arr(board_names, MAX_BOARDS);
