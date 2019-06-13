@@ -305,6 +305,22 @@ void add_item(Item boards[MAX_BOARDS][MAX_ITEMS], char desc[], char due[]) {
     }
 }
 
+void delete_item(Item boards[MAX_BOARDS][MAX_ITEMS],
+        int boardId, int itemId) {
+    int i;
+    for (i=itemId; i<MAX_ITEMS-1; i++) {
+        if (strlen(boards[boardId][i+1].desc) > 0) {
+            printf("deleting\n");
+            strcpy(boards[boardId][i].desc, boards[boardId][i+1].desc);
+            strcpy(boards[boardId][i].due, boards[boardId][i+1].due);
+        }
+        else
+            break;
+    }
+    boards[boardId][i].desc[0] = '\0';
+    boards[boardId][i].due[0] = '\0';
+}
+
 // add item
 // delete item
 // move item
@@ -329,12 +345,12 @@ int main() {
     //print_items(boards);
 
     display(boards, board_names, num_boards);
-    //num_boards = add_board(board_names, num_boards, "Backlog");
-    //write_boards(boards, board_names, num_boards);
 
     num_boards = read(boards, board_names);
     //num_boards = delete_board(boards, board_names, num_boards, "Backlog");
     //add_item(boards, "hello", "randtime");
+    //delete_item(boards, 0, 1);
+
     write_boards(boards, board_names, num_boards);
 
     free_str_arr(board_names, MAX_BOARDS);
