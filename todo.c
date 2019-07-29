@@ -207,11 +207,12 @@ void display(Item boards[MAX_BOARDS][MAX_ITEMS],
 
     // display header
     for (i=0; i<num_boards; i++)
-        printf("%s%-25s" COL_X, colours[i], board_names[i]);
+        printf("  %s%-25s" COL_X, colours[i], board_names[i]);
     printf("\n");
 
     for (j=0; j<10; j++) {
         empty_count = 0;
+        printf("%d ", j);
         for (i=0; i<num_boards; i++) {
             if (strlen(boards[i][j].desc) == 0) {
                 empty_count++;
@@ -294,12 +295,13 @@ int delete_board(Item boards[MAX_BOARDS][MAX_ITEMS],
 }
 
 /* insert into correct place next time */
-void add_item(Item boards[MAX_BOARDS][MAX_ITEMS], char desc[], char due[]) {
+void add_item(Item boards[MAX_BOARDS][MAX_ITEMS],
+        int boardId, char desc[], char due[]) {
     int i;
     for (i=0; i<MAX_ITEMS; i++) {
-        if (strlen(boards[0][i].desc) <= 0) {
-            strcpy(boards[0][i].desc, desc);
-            strcpy(boards[0][i].due, due);
+        if (strlen(boards[boardId][i].desc) <= 0) {
+            strcpy(boards[boardId][i].desc, desc);
+            strcpy(boards[boardId][i].due, due);
             break;
         }
     }
@@ -308,6 +310,7 @@ void add_item(Item boards[MAX_BOARDS][MAX_ITEMS], char desc[], char due[]) {
 void delete_item(Item boards[MAX_BOARDS][MAX_ITEMS],
         int boardId, int itemId) {
     int i;
+    printf("deleting %d %d\n", boardId, itemId);
     for (i=itemId; i<MAX_ITEMS-1; i++) {
         if (strlen(boards[boardId][i+1].desc) > 0) {
             printf("deleting\n");
@@ -321,10 +324,18 @@ void delete_item(Item boards[MAX_BOARDS][MAX_ITEMS],
     boards[boardId][i].due[0] = '\0';
 }
 
+// move item by n boards
+void move_item(Item boards[MAX_BOARDS][MAX_ITEMS],
+        int boardId, int itemId, int n) {
+    Item item = boards[boardId][itemId];
+    add_item(boards, boardId + n, item.desc, item.due);
+    delete_item(boards, boardId, itemId);
+}
+
 // add item
 // delete item
-// move item
-int main() {
+// move item to next board
+int main(int argc, char **argv) {
     Item boards[MAX_BOARDS][MAX_ITEMS] = {{{{0}}}};
     char **board_names = init_str_arr(MAX_BOARDS, MAX_LENGTH);
 
@@ -344,14 +355,34 @@ int main() {
     //print_str_arr(board_names, num_boards);
     //print_items(boards);
 
-    display(boards, board_names, num_boards);
+    //display(boards, board_names, num_boards);
 
     num_boards = read(boards, board_names);
+
+    // read args
+    if (argc >= 4) {
+        switch (argv[3][0]) {
+            case 'a':
+                add_item(boards, 0, argv[1], argv[2]);
+                break;
+            case 'd':
+                delete_item(boards, atoi(argv[1]), atoi(argv[2]));
+                break;
+            case 'n':
+                move_item(boards, atoi(argv[1]), atoi(argv[2]), 1);
+                break;
+            case 'b':
+                move_item(boards, atoi(argv[1]), atoi(argv[2]), -1);
+        }
+    }
+    
     //num_boards = delete_board(boards, board_names, num_boards, "Backlog");
-    //add_item(boards, "hello", "randtime");
-    //delete_item(boards, 0, 1);
+    //add_item(boards, "Testing", "randtime");
+    //delete_item(boards, 2, 0);
+    //move_item(boards, 0, 1);
 
     write_boards(boards, board_names, num_boards);
+    display(boards, board_names, num_boards);
 
     free_str_arr(board_names, MAX_BOARDS);
 
