@@ -57,6 +57,15 @@ void test_display(void) {
     printf(COL_X "Test" COL_X "\n");
 }
 
+void display_help() {
+    printf("Commands:\n");
+    printf("- a: add item.              format: <description> <time> a\n");
+    printf("- d: delete item.           format: <boardId> <itemId> d\n");
+    printf("- n: move to next board.    format: <boardId> <itemId> n\n");
+    printf("- b: move to prev board.    format: <boardId> <itemId> b\n");
+    printf("- h: help\n\n");
+}
+
 void sort(Item* items, size_t items_i,
         Item* todo, size_t* todo_i, 
         Item* doing, size_t* doing_i,
@@ -360,19 +369,24 @@ int main(int argc, char **argv) {
     num_boards = read(boards, board_names);
 
     // read args
-    if (argc >= 4) {
-        switch (argv[3][0]) {
-            case 'a':
-                add_item(boards, 0, argv[1], argv[2]);
-                break;
-            case 'd':
-                delete_item(boards, atoi(argv[1]), atoi(argv[2]));
-                break;
-            case 'n':
-                move_item(boards, atoi(argv[1]), atoi(argv[2]), 1);
-                break;
-            case 'b':
-                move_item(boards, atoi(argv[1]), atoi(argv[2]), -1);
+    if (argc == 2 && argv[1][0] == 'h') {
+        display_help();
+    }
+    else {
+        if (argc >= 4) {
+            switch (argv[3][0]) {
+                case 'a':
+                    add_item(boards, 0, argv[1], argv[2]);
+                    break;
+                case 'd':
+                    delete_item(boards, atoi(argv[1]), atoi(argv[2]));
+                    break;
+                case 'n':
+                    move_item(boards, atoi(argv[1]), atoi(argv[2]), 1);
+                    break;
+                case 'b':
+                    move_item(boards, atoi(argv[1]), atoi(argv[2]), -1);
+            }
         }
     }
     
