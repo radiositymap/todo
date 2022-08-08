@@ -12,7 +12,7 @@
 #define COL_X "\x1b[00m"
 
 #define FILENAME "list.txt"
-#define DELIM ","
+#define DELIM "`"
 #define MAX_BOARDS 10
 #define MAX_ITEMS 50
 #define MAX_LENGTH 60
@@ -67,7 +67,7 @@ void display_help() {
 }
 
 void sort(Item* items, size_t items_i,
-        Item* todo, size_t* todo_i, 
+        Item* todo, size_t* todo_i,
         Item* doing, size_t* doing_i,
         Item* done, size_t* done_i) {
 
@@ -92,7 +92,7 @@ void sort(Item* items, size_t items_i,
 void print(Item* items, size_t size) {
     int i;
     for (i=0; i<size; i++) {
-        printf("%-30s%-30s%20d\n", 
+        printf("%-30s%-30s%20d\n",
                 items[i].desc, items[i].due, items[i].board);
     }
 }
@@ -107,7 +107,7 @@ void write(FILE *f, char* header, Item* items, size_t size) {
     int i;
     fprintf(f, "%s\n", header);
     for (i=0; i<size; i++) {
-        fprintf(f, "%s,%s\n", items[i].desc, items[i].due);
+        fprintf(f, "%s" DELIM "%s\n", items[i].desc, items[i].due);
     }
 }
 
@@ -183,7 +183,6 @@ char ** init_str_arr(size_t arr_size, size_t str_len) {
         str_arr[i] = malloc(str_len * sizeof(char));
 
     return str_arr;
-    
 }
 
 void free_str_arr(char **str_arr, size_t arr_size) {
@@ -221,7 +220,15 @@ void display(Item boards[MAX_BOARDS][MAX_ITEMS],
 
     for (j=0; j<10; j++) {
         empty_count = 0;
-        printf("%d ", j);
+
+        // print index if row is not empty
+        for (i=0; i<num_boards; i++) {
+            if (strlen(boards[i][j].desc) != 0) {
+                printf("%d ", j);
+                break;
+            }
+        }
+
         for (i=0; i<num_boards; i++) {
             if (strlen(boards[i][j].desc) == 0) {
                 empty_count++;
@@ -246,15 +253,16 @@ void write_boards(Item boards[MAX_BOARDS][MAX_ITEMS],
     int i, j;
     if (f = fopen(FILENAME, "w")) {
         for (i=0; i<num_boards-1; i++)
-            fprintf(f, "%s,", board_names[i]);
+            fprintf(f, "%s" DELIM, board_names[i]);
         fprintf(f, "%s\n\n", board_names[i]);
 
         for (i=0; i<num_boards; i++) {
             fprintf(f, "%s\n", board_names[i]);
             for (j=0; j<MAX_ITEMS; j++)
-                if (strlen(boards[i][j].desc) > 0)
-                    fprintf(f, "%s,%s\n",  boards[i][j].desc, boards[i][j].due);
-                else {
+                if (strlen(boards[i][j].desc) > 0) {
+                    fprintf(f, "%s" DELIM "%s\n",
+                        boards[i][j].desc, boards[i][j].due);
+                } else {
                     fprintf(f, "\n");
                     break;
                 }
