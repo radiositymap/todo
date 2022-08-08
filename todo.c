@@ -16,6 +16,7 @@
 #define MAX_BOARDS 10
 #define MAX_ITEMS 50
 #define MAX_LENGTH 60
+#define WIDTH 25
 
 const char colours[][6] = {
     COL_R,
@@ -210,16 +211,24 @@ void print_items(Item boards[MAX_BOARDS][MAX_ITEMS]) {
 
 void display(Item boards[MAX_BOARDS][MAX_ITEMS],
         char ** board_names, size_t num_boards) {
-    int i, j;
+    int i, j, k;
     int empty_count = 0;
 
     // display header
-    for (i=0; i<num_boards; i++)
-        printf("  %s%-25s" COL_X, colours[i], board_names[i]);
+    for (i=0; i<num_boards; i++) {
+        if (i==0)
+            printf(" ");
+        printf(" %s%*s" COL_X, colours[i], -WIDTH, board_names[i]);
+    }
+    printf("\n ");
+    for (j=0; j<num_boards; j++) {
+        printf(" ");
+        for (i=0; i<25; i++)
+            printf("―");
+    }
     printf("\n");
-
     for (j=0; j<10; j++) {
-        empty_count = 0;
+        //empty_count = 0;
 
         // print index if row is not empty
         for (i=0; i<num_boards; i++) {
@@ -228,20 +237,35 @@ void display(Item boards[MAX_BOARDS][MAX_ITEMS],
                 break;
             }
         }
-
-        for (i=0; i<num_boards; i++) {
-            if (strlen(boards[i][j].desc) == 0) {
-                empty_count++;
-                if (empty_count >= num_boards) {
-                    printf("\n");
-                    return;
+        // print desc in multiple rows
+        for (k=0; k<3; k++) {
+            empty_count=0;
+            for (i=0; i<num_boards; i++) {
+                if (strlen(boards[i][j].desc) == 0) {
+                    empty_count++;
+                    if (empty_count >= num_boards) {
+                        printf("\n");
+                        return;
+                    }
                 }
+                if (i>0)
+                    printf(" ");
+                else if (k>0)
+                    printf("  ");
+                printf("%-*.*s", WIDTH, WIDTH, boards[i][j].desc+WIDTH*k);
             }
-            printf("%-25s", boards[i][j].desc);
+            printf("\n");
         }
-        printf("\n");
+        // print due date
+        printf(" ");
         for (i=0; i<num_boards; i++) {
-            printf(COL_B "%25s" COL_X, boards[i][j].due);
+            printf(COL_B " %*s" COL_X, WIDTH, boards[i][j].due);
+        }
+        printf("\n ");
+        for (k=0; k<num_boards; k++) {
+            printf(" ");
+            for (i=0; i<25; i++)
+                printf("―");
         }
         printf("\n");
     }
@@ -397,7 +421,7 @@ int main(int argc, char **argv) {
             }
         }
     }
-    
+
     //num_boards = delete_board(boards, board_names, num_boards, "Backlog");
     //add_item(boards, "Testing", "randtime");
     //delete_item(boards, 2, 0);
