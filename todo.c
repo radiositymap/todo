@@ -351,7 +351,6 @@ void add_item(Item boards[MAX_BOARDS][MAX_ITEMS],
 void delete_item(Item boards[MAX_BOARDS][MAX_ITEMS],
         int boardId, int itemId) {
     int i;
-    printf("deleting %d %d\n", boardId, itemId);
     for (i=itemId; i<MAX_ITEMS-1; i++) {
         if (strlen(boards[boardId][i+1].desc) > 0) {
             printf("deleting\n");
@@ -361,8 +360,8 @@ void delete_item(Item boards[MAX_BOARDS][MAX_ITEMS],
         else
             break;
     }
-    boards[boardId][i].desc[0] = '\0';
-    boards[boardId][i].due[0] = '\0';
+    memset(boards[boardId][i].desc, 0, strlen(boards[boardId][i].desc));
+    memset(boards[boardId][i].due, 0, strlen(boards[boardId][i].due));
 }
 
 // move item by n boards
